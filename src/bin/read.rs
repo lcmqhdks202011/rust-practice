@@ -1,10 +1,43 @@
 use std::env;
-use std::io::{self, Read, Write};
+use std::io::{self, Read, Write, Result, ErrorKind};
+use clap::{App, Arg};
+use std::fs::File;
 
 const CHUNK_SIZE: usize = 16 * 1024;
 
-fn main() {
-    let silent = env::var("PV_SILENT").unwrap_or(String::new()).len() > 0;
+fn main() -> Result<()>{
+    let matches = App::new("pipeviewer")
+        .arg(Arg::with_name("infile").help("Read from a file instead of stdin"))
+        .arg(Arg::with_name("outfile")
+            .short("o")
+            .long("outfile")
+            .takes_value(true)
+            .help("Write to file instead of stdout"))
+        .arg(Arg::with_name("silent")
+            .short("s")
+            .long("silent"))
+        .get_matches();
+    let infile = matches.value_of("infile").unwrap_or_default();
+    let outfile = matches.value_of("outfile").unwrap_or_default();
+    let silent = if matches.is_present("silent") {
+        true
+    } else {
+        !env::var("PV_SILENT").unwrap_or_default().is_empty()
+    };
+    dbg!(infile, outfile, silent);
+    // let silent = env::var("PV_SILENT").unwrap_or(String::new()).len() > 0;
+
+    let mut reader : Box<dyn Read> = if !infile.is_empty() {
+        Box::new(File::open(infile)?)
+    } else {
+        Box::new(io::stdin())
+    };
+
+    let mut writer: Box<dyn Write> = if !outfile.is_empty() {
+        Box::new(File::create(outfile)?)
+    } else {
+        Box::new(io::stdout())
+    };
 
     let mut total_bytes = 0;
 
@@ -16,9 +49,20 @@ fn main() {
             Err(_) => break,
         };
         total_bytes += num_read;
-        io::stdout().write_all(&buffer[..num_read]).unwrap();
+        if !silent {
+            eprint!("\r{}", total_bytes)
+        }
+        if let Err(e) = io::stdout().write_all(&buffer[..num_read]) {
+            // if e.kind() == ErrorKind::BrokenPipe {
+            //     break;
+            // }
+            // return Err(e);
+            eprintln!("Oh no! Something went wrong: {}", e);
+        }
     }
     if !silent {
         eprintln!("num_read: {}", total_bytes);
     }
+
+    Ok(())
 }
