@@ -6,7 +6,7 @@ pub fn read(infile: &str) -> Result<Vec<u8>> {
     let mut reader : Box<dyn Read> = if !infile.is_empty() {
         Box::new(BufReader::new(File::open(infile)?))
     } else {
-        Box::new(io::stdin())
+        Box::new(BufReader::new(io::stdin()))
     };
 
     let mut buffer = [0; CHUNK_SIZE];
@@ -17,7 +17,10 @@ pub fn read(infile: &str) -> Result<Vec<u8>> {
     //     Err(_) => break,
     // };
 
-    let num_read = reader.read()
+    let num_read = match reader.read(&mut buffer) {
+        Ok(x) => x,
+        Err(e) => return Err(e),
+    };
 
-    Ok(())
+    Ok(Vec::from(&buffer[..num_read]))
 }

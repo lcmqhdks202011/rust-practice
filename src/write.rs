@@ -1,37 +1,24 @@
-use clap::{App, Arg};
-use std::env;
+use std::fs::File;
+use std::io::{self, BufWriter, ErrorKind, Result, Write};
 
-pub struct Args {
-    pub infile: String,
-    pub outfile: String,
-    pub silent: bool,
-}
+pub fn write(outfile: &str, buffer: &[u8]) -> Result<bool> {
 
-impl Args {
-    pub fn parse() -> Self {
-        let matches = App::new("pipeviewer")
-            .arg(Arg::with_name("infile").help("Read from a file instead of stdin"))
-            .arg(Arg::with_name("outfile")
-                .short("o")
-                .long("outfile")
-                .takes_value(true)
-                .help("Write to file instead of stdout"))
-            .arg(Arg::with_name("silent")
-                .short("s")
-                .long("silent"))
-            .get_matches();
-        let infile = matches.value_of("infile").unwrap_or_default().to_string();
-        let outfile = matches.value_of("outfile").unwrap_or_default().to_string();
-        let silent = if matches.is_present("silent") {
-            true
-        } else {
-            !env::var("PV_SILENT").unwrap_or_default().is_empty()
-        };
+    let mut writer: Box<dyn Write> = if !outfile.is_empty() {
+        Box::new(BufWriter::new(File::create(outfile)?))
+    } else {
+        Box::new(BufWriter::new(io::stdout()))
+    };
 
-        Self {
-            infile,
-            outfile,
-            silent
+    if let Err(e) = writer.write_all(&buffer) {
+
+        if e.kind() == ErrorKind::BrokenPipe {
+            // break;
+            //Stop Cleanly
+            return Ok(false);
         }
+        return Err(e);
     }
+
+    // keep going
+    Ok(true)
 }
