@@ -1,14 +1,28 @@
-use clap::ErrorKind;
+use std::io::Result;
+use std::sync::{Arc, Mutex};
 
-pub fn stats(silent: bool, num_read: usize, total_bytes: &mut usize, last: bool) {
+pub fn stats_loop(silent: bool, quit: Arc<Mutex<bool>>) -> Result<()> {
 
-    *total_bytes += num_read;
+    let mut total_bytes = 0;
+    loop {
+        // todo receive the vector of bytes
+        let buffer: Vec<u8> = Vec::new();
+        total_bytes += buffer.len();
 
-    if !silent {
-        eprint!("\r{}", total_bytes);
-        if last {
-            eprintln!()
+        if !silent {
+            eprint!("\r{}", total_bytes);
         }
+
+        let quit = quit.lock().unwrap();
+
+        if *quit {
+            break;
+        }
+
     }
+
+    eprintln!();
+
+    Ok(())
 
 }
