@@ -11,14 +11,14 @@ impl Args {
     pub fn parse() -> Self {
         let matches = App::new("pipeviewer")
             .arg(Arg::with_name("infile").help("Read from a file instead of stdin"))
-            .arg(Arg::with_name("outfile")
-                .short("o")
-                .long("outfile")
-                .takes_value(true)
-                .help("Write to file instead of stdout"))
-            .arg(Arg::with_name("silent")
-                .short("s")
-                .long("silent"))
+            .arg(
+                Arg::with_name("outfile")
+                    .short("o")
+                    .long("outfile")
+                    .takes_value(true)
+                    .help("Write to file instead of stdout"),
+            )
+            .arg(Arg::with_name("silent").short("s").long("silent"))
             .get_matches();
         let infile = matches.value_of("infile").unwrap_or_default().to_string();
         let outfile = matches.value_of("outfile").unwrap_or_default().to_string();
@@ -31,7 +31,7 @@ impl Args {
         Self {
             infile,
             outfile,
-            silent
+            silent,
         }
     }
 }
