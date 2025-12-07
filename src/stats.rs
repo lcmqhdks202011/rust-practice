@@ -1,7 +1,10 @@
-// use std::fmt::format;
+//! The stats module contains the stats loop
+//!
+//! # Some Header
+//! More discussion!
+
+
 use std::io::{self, Result, Stderr, Write};
-// use std::sync::{Arc, Mutex};
-// use std::sync::mpsc::{Receiver, Sender};
 use crossbeam::channel::Receiver;
 use crossterm::style::Stylize;
 use crossterm::{
@@ -16,17 +19,13 @@ use timer::Timer;
 pub fn stats_loop(silent: bool, stats_rx: Receiver<usize>) -> Result<()> {
     let mut total_bytes = 0;
     let start = Instant::now();
-    // let mut last_instant = Instant::now();
     let mut timer = Timer::new();
     let mut stderr = io::stderr();
     loop {
-        // // todo receive the vector of bytes
-        // let buffer: Vec<u8> = Vec::new();
-        // let buffer = stats_rx.recv().unwrap();
-        // let num_bytes = buffer.len();
+
         let num_bytes = stats_rx.recv().unwrap();
         timer.update();
-        let now = Instant::now();
+        
         let rate_per_second = num_bytes as f64 / timer.delta.as_secs_f64();
         total_bytes += num_bytes;
 
@@ -39,10 +38,6 @@ pub fn stats_loop(silent: bool, stats_rx: Receiver<usize>) -> Result<()> {
                 rate_per_second
             );
         }
-
-        // if write_tx.send(buffer).is_err() {
-        //     break;
-        // }
 
         if num_bytes == 0 {
             break;
@@ -71,11 +66,31 @@ fn output_progress(stderr: &mut Stderr, bytes: usize, elapsed: String, rate: f64
     let _ = stderr.flush();
 }
 
-trait TimeOutput {
+
+
+
+
+
+
+
+
+
+
+
+/// The TimeOutput trait adds a '.as_time()' method to `u64`
+///
+/// #Example
+/// Here is an example of how to use it.
+/// ```rust
+/// use rust_myproject::stats::TimeOutput;
+/// assert_eq!(65_u64.as_time(), String::from("0:01:05"))
+/// ```
+pub trait TimeOutput {
     fn as_time(&self) -> String;
 }
 
 impl TimeOutput for u64 {
+    /// Renders the u64 into a time string
     fn as_time(&self) -> String {
         let (hours, left) = (*self / 3600, *self % 3600);
         let (minutes, seconds) = (left / 60, left % 60);
