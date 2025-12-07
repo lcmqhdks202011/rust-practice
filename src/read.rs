@@ -27,7 +27,7 @@ pub fn read_loop(infile: &str, stats_tx: Sender<Vec<u8>>) -> Result<()> {
     }
 
     let _ = stats_tx.send(Vec::new());
-    // // todo: send an empty buffer to the stats thread
+    // // todo: send an empty buffer to the stats threa
     // let mut quit = quit.lock().unwrap();
     //
     // *quit = true;
